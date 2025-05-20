@@ -8,7 +8,8 @@ from datetime import datetime, timedelta, timezone
 # Config
 TOGGL_API_TOKEN = os.environ.get("TOGGL_API_TOKEN")
 PROJECTS = {"TrueWork": 210645944, "Entertainment": 211402336}
-GOOGLE_SHEET_NAME = "TogglLog"
+GOOGLE_SHEET_KEY = "1LnXyqlzjRm6BEejWdGb3y66FgZD2GmaMmfNmYdDW"
+WORKSHEET_NAME = "TogglLog"
 
 # Auth with Google Sheets
 scope = [
@@ -18,7 +19,7 @@ scope = [
 creds_json = json.loads(os.environ["GOOGLE_CREDENTIALS_JSON"])
 creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_json, scope)
 client = gspread.authorize(creds)
-sheet = client.open(GOOGLE_SHEET_NAME).sheet1
+sheet = client.open_by_key(GOOGLE_SHEET_KEY).worksheet(WORKSHEET_NAME)
 
 # Existing Toggl IDs
 existing_ids = set(sheet.col_values(1))  # First column

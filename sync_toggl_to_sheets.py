@@ -44,8 +44,8 @@ else:
 client = gspread.authorize(creds)
 sheet = client.open_by_key(GOOGLE_SHEET_KEY).worksheet(WORKSHEET_NAME)
 
-# Existing Toggl IDs
-existing_ids = set(sheet.col_values(1))  # First column
+# Existing Toggl IDs - read once from column A before processing new entries
+existing_ids = set(sheet.col_values(1))  # Assumes column A is for Toggl IDs
 
 # — Build the Basic Auth header explicitly
 token_pair = f"{TOGGL_API_TOKEN}:api_token".encode("utf-8")
@@ -66,19 +66,35 @@ if resp.status_code == 401:
     raise RuntimeError(f"Toggl auth failed: {resp.status_code} {resp.text}")
 
 entries = resp.json()
-existing_ids = set(sheet.col_values(1))  # first column = Toggl ID
+# The redundant existing_ids retrieval that was here has been removed.
 
 # — Append new entries
 id_to_name = {v: k for k, v in PROJECTS.items()}
+
+# Determine the starting row for new entries.
+# len(sheet.get_all_values()) + 1 is the standard way to find the next available row.
+all_sheet_data = sheet.get_all_values()
+next_row_to_write = len(all_sheet_data) + 1
+
+
 for e in entries:
     if e["project_id"] in id_to_name and str(e["id"]) not in existing_ids:
-        sheet.append_row(
-            [
-                str(e["id"]),
-                e.get("description", ""),
-                e.get("start", ""),
-                e.get("stop", ""),
-                round(e.get("duration", 0) / 60, 2),
-                id_to_name[e["project_id"]],
-            ]
+        row_data = [
+            str(e["id"]),
+            e.get("description", ""),
+            e.get("start", ""),
+            e.get("stop", ""),
+            round(e.get("duration", 0) / 60, 2),
+            id_to_name[e["project_id"]],
+        ]
+        # Update cells directly, ensuring data starts in column A
+        # Using named arguments for update() to resolve deprecation warning and improve clarity.
+        sheet.update(
+            range_name=f"A{next_row_to_write}:F{next_row_to_write}", values=[row_data]
+        )
+
+        # Add to existing_ids for the current run to prevent duplicates if API returns same ID multiple times
+        existing_ids.add(str(e["id"]))
+        next_row_to_write += (
+            1  # Move to the next row for the next potential entry in this run
         )

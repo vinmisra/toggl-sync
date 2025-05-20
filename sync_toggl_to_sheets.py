@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 # Config
 TOGGL_API_TOKEN = os.environ.get("TOGGL_API_TOKEN")
 PROJECTS = {"TrueWork": 210645944, "Entertainment": 211402336}
-GOOGLE_SHEET_KEY = "1LnXyqlzjRm6BEejWdGb3y66FgZD2GmaMmfNmYdDW"
+GOOGLE_SHEET_KEY = "1LnXyqlzjRm6BEejWdGb3y66FgZD2GmaMmfNmYdDW-dU"
 WORKSHEET_NAME = "TogglLog"
 
 # Auth with Google Sheets

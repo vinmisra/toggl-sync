@@ -77,8 +77,8 @@ all_sheet_data = sheet.get_all_values()
 next_row_to_write = len(all_sheet_data) + 1
 
 
-# Helper function to format datetime strings for Google Sheets
-def format_datetime_for_gsheets(iso_datetime_str: str) -> str:
+# Helper function to format date strings for Google Sheets
+def format_date_for_gsheets(iso_datetime_str: str) -> str:
     if not iso_datetime_str:
         return ""
     try:
@@ -86,30 +86,49 @@ def format_datetime_for_gsheets(iso_datetime_str: str) -> str:
         if iso_datetime_str.endswith("Z"):
             iso_datetime_str = iso_datetime_str[:-1] + "+00:00"
         dt_obj = datetime.fromisoformat(iso_datetime_str)
-        return dt_obj.strftime("%Y-%m-%d %H:%M:%S")
+        return dt_obj.strftime("%Y-%m-%d")
     except ValueError:
-        # If parsing fails for any reason, return the original string or an empty one
-        return iso_datetime_str  # Or consider returning "" if preferred for errors
+        # If parsing fails for any reason, return the original string
+        return iso_datetime_str
+
+
+# Helper function to format time strings for Google Sheets
+def format_time_for_gsheets(iso_datetime_str: str) -> str:
+    if not iso_datetime_str:
+        return ""
+    try:
+        # Replace 'Z' with '+00:00' for consistent parsing by fromisoformat
+        if iso_datetime_str.endswith("Z"):
+            iso_datetime_str = iso_datetime_str[:-1] + "+00:00"
+        dt_obj = datetime.fromisoformat(iso_datetime_str)
+        return dt_obj.strftime("%H:%M:%S")
+    except ValueError:
+        # If parsing fails for any reason, return the original string
+        return iso_datetime_str
 
 
 for e in entries:
     if e["project_id"] in id_to_name and str(e["id"]) not in existing_ids:
-        start_time_str = format_datetime_for_gsheets(e.get("start"))
-        stop_time_str = format_datetime_for_gsheets(e.get("stop"))
+        start_date_str = format_date_for_gsheets(e.get("start"))
+        start_time_str = format_time_for_gsheets(e.get("start"))
+        end_date_str = format_date_for_gsheets(e.get("stop"))
+        end_time_str = format_time_for_gsheets(e.get("stop"))
 
         row_data = [
             str(e["id"]),
             e.get("description", ""),
+            start_date_str,
             start_time_str,
-            stop_time_str,
+            end_date_str,
+            end_time_str,
             round(e.get("duration", 0) / 60, 2),
             id_to_name[e["project_id"]],
         ]
         # Update cells directly, ensuring data starts in column A
         # Using named arguments for update() to resolve deprecation warning and improve clarity.
-        # Adding value_input_option='USER_ENTERED' to help Google Sheets parse dates.
+        # Adding value_input_option='USER_ENTERED' to help Google Sheets parse dates/times.
         sheet.update(
-            range_name=f"A{next_row_to_write}:F{next_row_to_write}",
+            range_name=f"A{next_row_to_write}:H{next_row_to_write}",  # Updated to H for 8 columns
             values=[row_data],
             value_input_option="USER_ENTERED",
         )

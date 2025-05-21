@@ -107,8 +107,11 @@ for e in entries:
         ]
         # Update cells directly, ensuring data starts in column A
         # Using named arguments for update() to resolve deprecation warning and improve clarity.
+        # Adding value_input_option='USER_ENTERED' to help Google Sheets parse dates.
         sheet.update(
-            range_name=f"A{next_row_to_write}:F{next_row_to_write}", values=[row_data]
+            range_name=f"A{next_row_to_write}:F{next_row_to_write}",
+            values=[row_data],
+            value_input_option="USER_ENTERED",
         )
 
         # Add to existing_ids for the current run to prevent duplicates if API returns same ID multiple times

@@ -77,13 +77,31 @@ all_sheet_data = sheet.get_all_values()
 next_row_to_write = len(all_sheet_data) + 1
 
 
+# Helper function to format datetime strings for Google Sheets
+def format_datetime_for_gsheets(iso_datetime_str: str) -> str:
+    if not iso_datetime_str:
+        return ""
+    try:
+        # Replace 'Z' with '+00:00' for consistent parsing by fromisoformat
+        if iso_datetime_str.endswith("Z"):
+            iso_datetime_str = iso_datetime_str[:-1] + "+00:00"
+        dt_obj = datetime.fromisoformat(iso_datetime_str)
+        return dt_obj.strftime("%Y-%m-%d %H:%M:%S")
+    except ValueError:
+        # If parsing fails for any reason, return the original string or an empty one
+        return iso_datetime_str  # Or consider returning "" if preferred for errors
+
+
 for e in entries:
     if e["project_id"] in id_to_name and str(e["id"]) not in existing_ids:
+        start_time_str = format_datetime_for_gsheets(e.get("start"))
+        stop_time_str = format_datetime_for_gsheets(e.get("stop"))
+
         row_data = [
             str(e["id"]),
             e.get("description", ""),
-            e.get("start", ""),
-            e.get("stop", ""),
+            start_time_str,
+            stop_time_str,
             round(e.get("duration", 0) / 60, 2),
             id_to_name[e["project_id"]],
         ]
